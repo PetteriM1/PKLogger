@@ -1,0 +1,15 @@
+name: PKLogger
+main: pklogger.Main
+version: "${pom.version}"
+api: ["1.0.0"]
+author: PetteriM1
+
+commands:
+  pklogger:
+    permission: pklogger.command
+    description: "Enable/disable packet logger"
+    usage: "/pklogger <on|off>"
+
+permissions:
+  pklogger.command:
+    default: op
