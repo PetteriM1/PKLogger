@@ -11,15 +11,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Logger extends Thread {
 
-    public File logFile;
-    public String logPath;
-    public boolean shutdown;
-    public boolean isShutdown;
-    public ConcurrentLinkedQueue<String> logBuffer = new ConcurrentLinkedQueue<>();
-    public static Logger get;
+    private File logFile;
+    private final String logPath;
+    private boolean shutdown;
+    private boolean isShutdown;
+    private final ConcurrentLinkedQueue<String> logBuffer = new ConcurrentLinkedQueue<>();
 
     public Logger(String logFile) {
-        get = this;
         logPath = logFile;
         initialize();
         start();
@@ -39,8 +37,8 @@ public class Logger extends Thread {
         }
     }
 
-    public void print(int mode, String player, DataPacket pk) {
-        logBuffer.add(new SimpleDateFormat("Y-M-d HH:mm:ss [").format(new Date()) + (mode == 1 ? "Send]" : "Receive]") + " [" + player + "] " + pk.getClass().getSimpleName());
+    public void print(boolean send, String player, DataPacket pk) {
+        logBuffer.add(new SimpleDateFormat("y-M-d HH:mm:ss [").format(new Date()) + (send ? "Send]" : "Receive]") + " [" + player + "] " + pk.toString());
     }
 
     @Override
@@ -56,7 +54,7 @@ public class Logger extends Thread {
         }
     }
 
-    public void initialize() {
+    private void initialize() {
         logFile = new File(logPath);
         if (!logFile.exists()) {
             try {
@@ -65,7 +63,7 @@ public class Logger extends Thread {
         }
     }
 
-    public void waitForMessage() {
+    private void waitForMessage() {
         while (logBuffer.isEmpty()) {
             try {
                 synchronized (this) {
@@ -76,10 +74,8 @@ public class Logger extends Thread {
         }
     }
 
-    public void flushBuffer(File logFile) {
-        Writer writer = null;
-        try {
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFile, true), StandardCharsets.UTF_8), 1024);
+    private void flushBuffer(File logFile) {
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFile, true), StandardCharsets.UTF_8), 1024)) {
             while (!logBuffer.isEmpty()) {
                 String message = logBuffer.poll();
                 if (message != null) {
@@ -89,12 +85,6 @@ public class Logger extends Thread {
             }
             writer.flush();
         } catch (Exception ignored) {
-        } finally {
-            try {
-                if (writer != null) {
-                    writer.close();
-                }
-            } catch (IOException ignored) {}
         }
     }
 }
